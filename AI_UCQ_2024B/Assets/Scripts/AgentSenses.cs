@@ -124,7 +124,7 @@ public class AgentSenses : MonoBehaviour
         }
     }
 
-    private bool TargetIsInRange(Vector3 targetPosition)
+    public bool TargetIsInRange(Vector3 targetPosition)
     {
         // Diferencia entre mi posición y la posición de mi objetivo.
         Vector3 distVector = VectorDiff(targetPosition, transform.position);
@@ -142,6 +142,9 @@ public class AgentSenses : MonoBehaviour
         // Entonces sí lo podría ver.
         return true;
     }
+
+    // Agregar una función que se va a parecer un poco a TargetIsInRange, pero que va a hacer la parte del Cono de visión.
+
 
     // Gizmo
     void OnDrawGizmos()
