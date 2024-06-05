@@ -22,17 +22,30 @@ public class SteeringBehaviors : MonoBehaviour
     public Rigidbody rb;
     public AgentSenses Senses;
 
+    public Rigidbody EnemyRigidbody;
+
 
     // Start is called before the first frame update
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        Senses = GetComponent<AgentSenses>();
+        Init();
+
+        // encontramos al GameObject de nombre infiltrator y le pedimos su componente rigidbody.
+        EnemyRigidbody = GameObject.Find("Infiltrator").GetComponent<Rigidbody>();
+
         // rb = GetComponent<CapsuleCollider>();
         // rb = GetComponent<MeshRenderer>();
         // Component.Destroy(rb);  // si destruyéramos el componente rigidbody aquí en el código, también
         // lo estaríamos borrando del GameObject que lo tiene asignado en el editor.
     }
+
+    protected void Init()
+    {
+        rb = GetComponent<Rigidbody>();
+        Senses = GetComponent<AgentSenses>();
+    }
+
+
 
     // Update is called once per frame
     void Update()
@@ -49,41 +62,56 @@ public class SteeringBehaviors : MonoBehaviour
         // bool MouseIsInVisionCone = Senses.TargetIsInVisionCone(mouseWorldPos);
 
 
-        if (MouseIsInRange)
-        {
-            Debug.Log("El mouse sí está en rango");
-            // Si ya la puede "ver" o sentir, pues ya debería poder reaccionar ante ello., En este caso, perseguirlo.
+        Debug.Log("El mouse sí está en rango");
+        // Si ya la puede "ver" o sentir, pues ya debería poder reaccionar ante ello., En este caso, perseguirlo.
 
-            // para perseguir a alguien, nos tenemos que mover en la dirección en la que están ellos, respecto a nuestra posición.
-            Vector3 DesiredDirection = mouseWorldPos - transform.position;
-            // Ahorita queremos solo la dirección, entonces guardamos la normalización de dicho vector.
-            Vector3 DesiredDirectionNormalized = DesiredDirection.normalized;
+        // Vector3 SeekVector = Seek(mouseWorldPos);
 
-            // Una fuerza de magnitud = Force (que es una variable de esta clase), multiplicado por la dirección deseada
-            // (que es la variable DesiredDirectionNormalized que tenemos aquí arribita).
+        Vector3 PursuitVector = Pursuit(EnemyRigidbody.position, EnemyRigidbody.velocity);
 
-            rb.AddForce(DesiredDirectionNormalized * -1.0f * Force, ForceMode.Acceleration);
+        // Una fuerza de magnitud = Force (que es una variable de esta clase), multiplicado por la dirección deseada
+        // (que es la variable DesiredDirectionNormalized que tenemos aquí arribita).
 
-            // Ahora necesitamos limitar velocidad, para que no supere a la máxima velocidad (MaxSpeed).
-            // Checamos la magnitud de la velocidad.
-            // si esa magnitud es mayor que la MaxSpeed, entonces hay que limitarlo
-            if (rb.velocity.magnitude > MaxSpeed)
-            {
-                // cómo le dirían: sigues yendo en la misma dirección, pero tu magnitud es distinta.
-                // Qué estamos tratando de cambiar? queremos cambiar la velocidad de nuestro rigidbody (es decir, rb.velocity)
-                // la queremos limitar a que su magnitud sea la de nuestra velocidad máxima
-                rb.velocity = rb.velocity.normalized * MaxSpeed;  // la misma dirección de movimiento, pero con la magnitud del límite que le ponemos (MaxSpeed)
-            }
+        rb.AddForce(PursuitVector * Force, ForceMode.Acceleration);
 
-        }
-        else
-        {
-            Debug.Log("El mouse NO está en rango");
-            rb.AddForce(rb.velocity.normalized*-1.0f * Force, ForceMode.Acceleration);
-        }
-
-
-
+        LimitToMaxSpeed();
 
     }
+
+    protected Vector3 Pursuit(Vector3 targetPosition, Vector3 targetCurrentVelocity)
+    {
+        // ¿cuánto tiempo le tomaría a nuestro agente llegar a la posición del target si nuestro agente va a su
+        // máxima velocidad?
+        // la distancia entre nuestro agente y su objetivo, dividido entre la máxima velocidad de nuestro agente
+        float timeToReachTargetPosition = (targetPosition - transform.position).magnitude / MaxSpeed;
+
+        // Usamos ese estimado de tiempo para proyectar/predecir la posición de nuestro objetivo según su velocidad.
+        // NOTA: La velocidad modifica una posición según cuánto tiempo pasó.
+        Vector3 predictedTargetPosition = targetPosition + targetCurrentVelocity * timeToReachTargetPosition;
+        return Seek(predictedTargetPosition);
+    }
+
+    protected Vector3 Seek(Vector3 targetPosition)
+    {
+        // para perseguir a alguien, nos tenemos que mover en la dirección en la que están ellos, respecto a nuestra posición.
+        Vector3 desiredDirection = targetPosition - transform.position;
+        // Ahorita queremos solo la dirección, entonces guardamos la normalización de dicho vector.
+        Vector3 desiredDirectionNormalized = desiredDirection.normalized;
+        return desiredDirectionNormalized;
+    }
+
+    protected void LimitToMaxSpeed()
+    {
+        // Ahora necesitamos limitar velocidad, para que no supere a la máxima velocidad (MaxSpeed).
+        // Checamos la magnitud de la velocidad.
+        // si esa magnitud es mayor que la MaxSpeed, entonces hay que limitarlo
+        if (rb.velocity.magnitude > MaxSpeed)
+        {
+            // cómo le dirían: sigues yendo en la misma dirección, pero tu magnitud es distinta.
+            // Qué estamos tratando de cambiar? queremos cambiar la velocidad de nuestro rigidbody (es decir, rb.velocity)
+            // la queremos limitar a que su magnitud sea la de nuestra velocidad máxima
+            rb.velocity = rb.velocity.normalized * MaxSpeed;  // la misma dirección de movimiento, pero con la magnitud del límite que le ponemos (MaxSpeed)
+        }
+    }
+
 }
