@@ -9,9 +9,10 @@ public class PursuitTarget : SteeringBehaviors
     public float circleRadius = 5.0f;
 
     // Start is called before the first frame update
-    void Start()
+    public void Awake()
     {
         Init();
+        EnemyRigidbody = null;
     }
 
     // Update is called once per frame
