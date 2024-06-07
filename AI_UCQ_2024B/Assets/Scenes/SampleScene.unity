@@ -303,9 +303,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: adcdfbb051136944f9098bfedda21d58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CurrentBehavior: 4
-  MaxSpeed: 16.98
-  Force: 123.47
+  CurrentBehavior: 5
+  MaxSpeed: 10
+  Force: 10
   rb: {fileID: 0}
   Senses: {fileID: 0}
   EnemyRigidbody: {fileID: 0}

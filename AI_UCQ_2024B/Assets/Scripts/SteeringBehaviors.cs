@@ -94,36 +94,43 @@ public class SteeringBehaviors : MonoBehaviour
 
     void FixedUpdate()
     {
-        Vector3 currentSteeringDirection = Vector3.zero;
+        if (EnemyRigidbody == null)
+            return;
+
+        Vector3 currentSteeringForce = Vector3.zero;
 
         // Vector3 SeekVector = Seek(mouseWorldPos);
         switch (CurrentBehavior)
         {
             case SteeringBehaviorType.Seek:
-                currentSteeringDirection = Seek(EnemyRigidbody.position);
+                currentSteeringForce = Seek(EnemyRigidbody.position);
                 break;
             case SteeringBehaviorType.Flee:
-                currentSteeringDirection = Flee(EnemyRigidbody.position);
+                currentSteeringForce = Flee(EnemyRigidbody.position);
                 break;
             case SteeringBehaviorType.Pursuit:
-                currentSteeringDirection = Pursuit(EnemyRigidbody.position, EnemyRigidbody.velocity);
+                currentSteeringForce = Pursuit(EnemyRigidbody.position, EnemyRigidbody.velocity);
                 break;
             case SteeringBehaviorType.Evade:
-                currentSteeringDirection = Evade(EnemyRigidbody.position, EnemyRigidbody.velocity);
+                currentSteeringForce = Evade(EnemyRigidbody.position, EnemyRigidbody.velocity);
                 break;
             case SteeringBehaviorType.SeekTheMouse:
                 // Hacer seek a la posición del mouse en pantalla dentro del juego.
-                currentSteeringDirection = Seek(MouseWorldPos);
+                currentSteeringForce = Seek(MouseWorldPos);
                 break;
             case SteeringBehaviorType.Arrive:
-                currentSteeringDirection = Arrive(MouseWorldPos, 5.0f);
+                currentSteeringForce = Arrive(MouseWorldPos, 5.0f);
                 break;
         }
 
         // Una fuerza de magnitud = Force (que es una variable de esta clase), multiplicado por la dirección deseada
         // (que es la variable DesiredDirectionNormalized que tenemos aquí arribita).
 
-        Vector3 currentSteeringForce = Vector3.Min(currentSteeringDirection, currentSteeringDirection.normalized * Force);
+        // ESTE ERA EL MAYOR ERROR, estaba usando Vector3.Min() en vez de ClampMagnitude porque erróneamente
+        // creí que lo que hacía era quedarse con el menor de los dos vectores, pero no, se queda con el 
+        // menor x, y, z de los vectores, por lo que podía quedarse con el X del vectorA, pero el Y del vectorB.
+        // ClampMagnitude es la forma correcta.
+        currentSteeringForce = Vector3.ClampMagnitude(currentSteeringForce, Force);
 
         rb.AddForce(currentSteeringForce, ForceMode.Acceleration);
 
