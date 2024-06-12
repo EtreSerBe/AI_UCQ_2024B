@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Numerics;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Vector3 = UnityEngine.Vector3;
@@ -20,6 +21,7 @@ public class SteeringBehaviors : MonoBehaviour
         Evade,
         SeekTheMouse,
         Arrive,
+        Wander,
         MAX  // el número de elementos que tiene dicho Enum. No 
     };
     
@@ -44,6 +46,8 @@ public class SteeringBehaviors : MonoBehaviour
     public float ToleranceRadius = 1.0f;
 
     private Vector3 MouseWorldPos = Vector3.zero;
+
+    public Vector3 WanderTargetPosition = Vector3.zero;
 
     void Awake()
     {
@@ -94,6 +98,7 @@ public class SteeringBehaviors : MonoBehaviour
 
     void FixedUpdate()
     {
+        // Esto es un chequeo para que no tronara por razones desconocidas de Unity.
         if (EnemyRigidbody == null)
             return;
 
@@ -121,6 +126,12 @@ public class SteeringBehaviors : MonoBehaviour
             case SteeringBehaviorType.Arrive:
                 currentSteeringForce = Arrive(MouseWorldPos, 5.0f);
                 break;
+            case SteeringBehaviorType.Wander:
+                currentSteeringForce = WanderNaive();
+                // currentSteeringForce += Flee(MouseWorldPos);
+                // Las fuerzas de los steering behaviors se pueden ir sumando conforme sea necesario,
+                // no solo un steering behavior a la vez.
+                break;
         }
 
         // Una fuerza de magnitud = Force (que es una variable de esta clase), multiplicado por la dirección deseada
@@ -138,7 +149,7 @@ public class SteeringBehaviors : MonoBehaviour
 
     }
 
-    bool InsideToleranceRadius(Vector3 targetPosition)
+    protected bool InsideToleranceRadius(Vector3 targetPosition)
     {
         float distance = Vector3.Distance(transform.position, targetPosition);
         if (distance < ToleranceRadius)
@@ -149,6 +160,28 @@ public class SteeringBehaviors : MonoBehaviour
         }
 
         return false;
+    }
+
+    protected Vector3 WanderNaive()
+    {
+        // Si estamos dentro de este rango de tolerancia, quiere decir que ya llegamos.
+        if (InsideToleranceRadius(WanderTargetPosition))
+        {
+            // si ya llegamos, entonces ya podemos pedir un nuevo punto al cual movernos.
+            // No necesitamos que nos den un TargetPosition, sino que nosotros lo tenemos que definir.
+            // La manera más rápida es usar una dirección aleatoria.
+            float x = Random.Range(-1.0f, 1.0f);
+            float z = Random.Range(-1.0f, 1.0f);
+            // RECORDATORIO, si queremos la pura dirección sin magnitud, tenemos que normalizar.
+            Vector3 randomDirection = new Vector3(x, 0.0f, z).normalized;
+
+            WanderTargetPosition = transform.position + (randomDirection * 15.0f);
+        }
+        // Si no hemos llegado al punto ese que queríamos, entonces seguimos yendo hacia él.
+
+        // targetPosition ahorita solo es un punto en el espacio, ¿para qué nos sirve
+        // si nos queremos mover?
+        return Arrive(WanderTargetPosition, 5.0f);
     }
 
     // Arrive
@@ -267,6 +300,9 @@ public class SteeringBehaviors : MonoBehaviour
         }
         // MovementDirection = MovementDirection.normalized;
         // Gizmos.DrawLine(transform.position, transform.position + MovementDirection * 10000f);
+
+        Gizmos.color = UnityEngine.Color.green;
+        Gizmos.DrawSphere(WanderTargetPosition, 1.0f);
     }
 
 }
