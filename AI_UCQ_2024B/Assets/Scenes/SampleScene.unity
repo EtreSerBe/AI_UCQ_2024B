@@ -139,6 +139,7 @@ GameObject:
   - component: {fileID: 627541225}
   - component: {fileID: 627541226}
   - component: {fileID: 627541227}
+  - component: {fileID: 627541228}
   m_Layer: 0
   m_Name: Amogus
   m_TagString: Untagged
@@ -242,7 +243,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 627541219}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0650dd7d72577714e86dcdbcd2e26843, type: 3}
   m_Name: 
@@ -298,7 +299,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 627541219}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: adcdfbb051136944f9098bfedda21d58, type: 3}
   m_Name: 
@@ -311,6 +312,18 @@ MonoBehaviour:
   EnemyRigidbody: {fileID: 0}
   ToleranceRadius: 1
   WanderTargetPosition: {x: 0, y: 0, z: 0}
+--- !u!114 &627541228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 627541219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d920d9b1dde029e4293e2c7c1950ac5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &680854443
 GameObject:
   m_ObjectHideFlags: 0
@@ -327,7 +340,7 @@ GameObject:
   - component: {fileID: 680854448}
   m_Layer: 0
   m_Name: Infiltrator
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
