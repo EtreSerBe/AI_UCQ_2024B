@@ -3,11 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BaseState
+public class BaseState : MonoBehaviour
 {
     public String Name = "BaseState";
     // Necesita "conocer" (tener una referencia o forma de contactar) a la máquina de estados que es su dueña.
     public BaseFSM FSMRef;
+
+    public BaseState()
+    {
+        Name = "BaseState";
+    }
 
     public BaseState(string inName, BaseFSM inBaseFSM)
     {

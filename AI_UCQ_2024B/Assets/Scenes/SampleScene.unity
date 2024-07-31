@@ -324,6 +324,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d920d9b1dde029e4293e2c7c1950ac5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  VisionAnglePatrol: 45
+  VisionDistancePatrol: 10
+  TimeSeeingInfiltratorBeforeEnteringAlert: 2
+  TimeToForget: 5
+  RotationAngle: 45
+  TimeToRotate: 3
+  VisionAngleAlert: 60
+  VisionDistanceAlert: 15
+  TimeSeeingInfiltratorBeforeEnteringAttack: 2
+  VisionAngleAttack: 45
+  VisionDistanceAttack: 10
+  PlayerGameObject: {fileID: 0}
 --- !u!1 &680854443
 GameObject:
   m_ObjectHideFlags: 0
