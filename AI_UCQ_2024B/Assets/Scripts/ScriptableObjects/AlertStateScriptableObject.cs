@@ -19,6 +19,9 @@ public class AlertStateScriptableObject : ScriptableObject
     // la necesitamos porque el NavMesh no nos avisa directamente cuando ya acabó.
     public float DistanceToGoalTolerance = 1.0f;
 
+    // Radio de la esfera del gizmo de la última posición conocida del player.
+    public float LastKnownPositionDebugSphereRadius = 1.0f;
+
     // SE ACTUALIZA A TRAVÉS DE LA FUNCIÓN CheckFieldOfView DIRECTAMENTE.
     // la última posición conocida del sospechoso
     // Si nos ponemos elaborados, hasta podríamos darle un margen de error

@@ -85,8 +85,9 @@ public class AlertState : BaseState
                 _accumulatedTimeDetectingPlayerBeforeEnteringAttack += Time.deltaTime;
                 if (_accumulatedTimeDetectingPlayerBeforeEnteringAttack >= _stateValues.TimeSeeingInfiltratorBeforeEnteringAttack)
                 {
+                    Debug.Log("Ya vi suficiente al player, puedo pasar al estado de Ataque.");
                     // si el tiempo acumulado es mayor, pasaríamos a Attack.
-                    //return;
+                    return;
                 }
             }
 
@@ -96,6 +97,8 @@ public class AlertState : BaseState
                 // y guardamos el momento en que lo vimos, para después poder checar si ya pasaron los X segundos
                 // antes de ir a checar la última posición conocida del player.
                 _lastTimePlayerSeen = Time.realtimeSinceStartup;
+
+                Debug.Log("Actualicé la última vez que vi al player en Stopped.");
             }
             else
             {
@@ -106,6 +109,8 @@ public class AlertState : BaseState
                 // Si después de un cierto tiempo de la última vez que detectó al jugador ya no lo ha visto.
                 if (_stateValues.TimeSinceLastSeenTreshold < transcurredTime)
                 {
+                    Debug.Log("Ya no he visto al player por un rato, cambiando de Stopped a GoingToCheck.");
+
                     // entonces ponemos LastTimePlayerSeen en -1 (valor que nosotros definimos),
                     // para que sepamos que no es válido ahorita.
                     _lastTimePlayerSeen = -1.0f;
@@ -135,6 +140,11 @@ public class AlertState : BaseState
             // Si vemos otra vez al jugador, inmediatamente pasamos al estado de Stopped.
             if (DetectedPlayer)
             {
+                Debug.Log("Vi al player mientras estaba en Alert.GoingToCheck, por lo que vuelvo a Alert.Stopped desde 0.");
+
+                // Si pasó esto, tenemos que hacer que se deje de mover. Así que le ponemos su propia posición como destination.
+                ((EnemyFSM)FSMRef).NavMeshAgentRef.SetDestination(FSMRef.transform.position);
+
                 // en el sub-estado de Stopped ya se encargarán de poner el _lastTimePlayerSeen adecuadamente.
                 _currentSubState = AlertSubState.Stopped;
                 // salimos de este sub-estado.
@@ -147,6 +157,7 @@ public class AlertState : BaseState
             float dist = Vector3.Distance(FSMRef.transform.position, _lastKnownPlayerLocation);
             if (dist < _stateValues.DistanceToGoalTolerance)  // OJO: el NavMeshAgent ya tiene un valor para esto, fíjense que no se estorben.
             {
+                Debug.Log("Ya llegué a la última posición conocida, ahora paso a Alert.ReturningToPosition.");
                 // Entonces ya estamos lo suficientemente cerca,
                 // y este enemigo puede empezar a regresar a su InitialPatrolPosition.
                 // Le ponemos al NavMeshAgent que su "destination" es esa initial Patrol position.
@@ -159,11 +170,22 @@ public class AlertState : BaseState
         {
             // Seguir checando a ver si de camino a la posición inicial se detecta al player.
             // Si sí lo vemos, nos vamos al estado de stopped
-            // y actualizamos el valor de LastKnownLocation
+            if (DetectedPlayer)
+            { 
+                // Si pasó esto, tenemos que hacer que se deje de mover. Así que le ponemos su propia posición como destination.
+                ((EnemyFSM)FSMRef).NavMeshAgentRef.SetDestination(FSMRef.transform.position);
+
+                Debug.Log("Vi al player mientras estaba en Alert.ReturningToPosition, por lo que vuelvo a Alert.Stopped desde 0.");
+                // en el sub-estado de Stopped ya se encargarán de poner el _lastTimePlayerSeen adecuadamente.
+                _currentSubState = AlertSubState.Stopped;
+                // salimos de este sub-estado.
+                return;
+            }
 
             // Checamos si este enemigo ya llegó a su posición inicial de patrullaje.
             if (Vector3.Distance(FSMRef.transform.position, ((EnemyFSM)FSMRef).InitialPatrolPosition) < _stateValues.DistanceToGoalTolerance)
             {
+                Debug.Log("Ya llegué a mi posición inicial, cambiaré al estado de Patrol.");
                 // Si sí, puede pasar al estado de patrullaje.
                 FSMRef.ChangeState(((EnemyFSM)FSMRef).PatrolStateRef);
                 // Hacemos return porque estamos saliendo de este estado.
@@ -172,11 +194,6 @@ public class AlertState : BaseState
             // Si no, pues seguirá moviéndose hacia su posición inicial de patrullaje hasta llegar.
         }
 
-
-        // Ahora le digo que cambie al estado de Patrullaje. (Solo para ejemplificar).
-        // No se les olvide la parte del Casteo.
-        //FSMRef.ChangeState( ((EnemyFSM)FSMRef).PatrolStateRef );
-        return;
     }
 
     public override void OnExit()
@@ -188,5 +205,13 @@ public class AlertState : BaseState
     {
         // Mandamos a llamar la función de la FSM, y le pasamos los valores que este estado ya contiene.
         return ((EnemyFSM)FSMRef).TargetIsInRange(PlayerGameObject.transform.position, _stateValues.VisionDistance);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+
+        // Dibujo de una esfera en la última posición conocida del player.
+        Gizmos.DrawSphere(_lastKnownPlayerLocation, _stateValues.LastKnownPositionDebugSphereRadius);
     }
 }

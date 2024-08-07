@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PatrolStateData
   m_EditorClassIdentifier: 
   VisionAngle: 45
-  VisionDistance: 50
+  VisionDistance: 20
   TimeSeeingInfiltratorBeforeEnteringAlert: 2
   TimeToForget: 5
   RotationAngle: 45

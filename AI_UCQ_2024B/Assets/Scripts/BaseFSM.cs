@@ -30,7 +30,7 @@ public class BaseFSM : MonoBehaviour
 
     // Update is called once per frame
     // Este tampoco se necesita cambiar nunca, porque lo único que la FSM hace es actualizar el estado actual.
-    void Update()
+    void FixedUpdate()
     {
         if (CurrentState != null)
         {

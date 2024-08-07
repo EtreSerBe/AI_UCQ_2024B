@@ -13,15 +13,15 @@ public class PatrolState : BaseState
     private PatrolStateScriptableObject _stateValues;
 
     // Posición de patrullaje inicial a la cual volverá después de Alert o Attack, según corresponda.
-    private Vector3 _initialPatrolPosition;
+    // private Vector3 _initialPatrolPosition;
 
     private GameObject _FSMGameObjectOwner;
 
-    private bool PlayerDetected = false;
+    private bool _playerDetected = false;
 
-    private float PlayerDetectedAccumulatedTime = 0.0f;
+    private float _playerDetectedAccumulatedTime = 0.0f;
 
-    private float AccumulatedTimeSinceLastPlayerDetected = 0.0f;
+    private float _accumulatedTimeSinceLastPlayerDetected = 0.0f;
 
     public bool EnableDebug;
 
@@ -44,7 +44,6 @@ public class PatrolState : BaseState
         base.InitializeState(inFSMRef);
 
         _stateValues = inStateValues;
-        _initialPatrolPosition = inInitialPatrolPosition;
         PlayerGameObject = inPlayerGameObject;
         // para poder acceder a la info del Patrullero, y, por ejemplo, hacer que rote cada cierto tiempo.
         _FSMGameObjectOwner = FSMRef.gameObject;
@@ -56,6 +55,9 @@ public class PatrolState : BaseState
 
         // Obtenemos una referencia a la co-rutina para poder detenerla apropiadamente.
         _rotationCoroutine = StartCoroutine(RotateCoroutine());
+
+        _playerDetectedAccumulatedTime = 0.0f;
+        _accumulatedTimeSinceLastPlayerDetected = 0.0f;
     }
 
     IEnumerator RotateCoroutine()
@@ -73,6 +75,7 @@ public class PatrolState : BaseState
 
     void RotateGuard()
     {
+        Debug.Log("Rotando al guardia.");
         _FSMGameObjectOwner.transform.Rotate(Vector3.up, _stateValues.RotationAngle);
     }
 
@@ -83,20 +86,24 @@ public class PatrolState : BaseState
         //    Debug.Log();
 
         // Primero necesitamos saber si estamos detectando al jugador o no.
-        PlayerDetected = TargetIsInRange();
+        _playerDetected = TargetIsInRange();
 
         // Si sí se detectó, tenemos que acumular tiempo en la variable de acumular tiempo de detección.
-        if (PlayerDetected)
+        if (_playerDetected)
         {
-            PlayerDetectedAccumulatedTime += Time.deltaTime;
+            // Primero, quitamos el tiempo acumulado de no ver al player, porque lo acabamos de ver.
+            _accumulatedTimeSinceLastPlayerDetected = 0.0f;
+
+            _playerDetectedAccumulatedTime += Time.deltaTime;
 
             // También, si sí lo detectamos, reseteamos este valor a 0.0f.
             // NOTA: una alternativa sería manejar estos de Accumulated como si fueran una barra que se llena y vacía.
-            AccumulatedTimeSinceLastPlayerDetected += Time.deltaTime;
+            _accumulatedTimeSinceLastPlayerDetected += Time.deltaTime;
 
             // Si el tiempo acumulado es mayor al umbral que pusimos (es decir: TimeSeeingInfiltratorBeforeEnteringAlert)
-            if (PlayerDetectedAccumulatedTime >= _stateValues.TimeSeeingInfiltratorBeforeEnteringAlert)
+            if (_playerDetectedAccumulatedTime >= _stateValues.TimeSeeingInfiltratorBeforeEnteringAlert)
             {
+                Debug.Log("Vi suficiente tiempo al player, pasaré al estado de Alerta.");
                 // Entonces pasamos al estado de alerta.
                 // Necesitamos castear de EnemyFSM para poder decirle a cuál estado queremos pasar.
                 FSMRef.ChangeState(((EnemyFSM)FSMRef).AlertStateRef);
@@ -108,13 +115,14 @@ public class PatrolState : BaseState
         else
         {
             // si no lo detectamos, acumulamos tiempo desde la última vez que lo vimos.
-            AccumulatedTimeSinceLastPlayerDetected += Time.deltaTime;
+            _accumulatedTimeSinceLastPlayerDetected += Time.deltaTime;
 
             // si no se detectó, y es llevamos un rato sin verlo, (es decir, si pasó cierto umbral de tiempo),
             // lo olvidamos y quitamos nuestro tiempo de detección acumulado.
-            if (AccumulatedTimeSinceLastPlayerDetected >= _stateValues.TimeToForget)
+            if (_accumulatedTimeSinceLastPlayerDetected >= _stateValues.TimeToForget)
             {
-                PlayerDetectedAccumulatedTime = 0.0f;
+                Debug.Log("Ya pasé mucho tiempo sin ver al player, me olvidaré de él.");
+                _playerDetectedAccumulatedTime = 0.0f;
             }
         }
     }
@@ -136,17 +144,6 @@ public class PatrolState : BaseState
     // Update is called once per frame by the FSM in this case.
     //public override void Update()
     //{
-    //    float h = 5.5f;
-
-    //    int i = (int)h;
-
-    //    float j = (float)i;
-
-    //    Debug.Log("h: " + h + " i: " + i + " j: " + j);
-
-    //    base.Update();
-
-    //    Debug.Log(PlayerGameObject.name);
 
     //    // Aquí es 100% NECESARIO que hagamos el cast de nuestro FSMRef (que es de la clase BaseFSM) y lo 
     //    // casteemos a la clase que SÍ contiene la variable a la que queremos acceder, en este caso, AlertStateRef.
