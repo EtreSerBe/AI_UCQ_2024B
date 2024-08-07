@@ -25,6 +25,8 @@ public class PatrolState : BaseState
 
     public bool EnableDebug;
 
+    private Coroutine _rotationCoroutine;
+
     public PatrolState()
     {
         Name = "Patrol";
@@ -37,6 +39,8 @@ public class PatrolState : BaseState
 
     public virtual void InitializeState(BaseFSM inFSMRef, GameObject inPlayerGameObject, PatrolStateScriptableObject inStateValues, Vector3 inInitialPatrolPosition)
     {
+        Name = "PatrolState";
+
         base.InitializeState(inFSMRef);
 
         _stateValues = inStateValues;
@@ -48,7 +52,10 @@ public class PatrolState : BaseState
 
     public override void OnEnter()
     {
-        StartCoroutine(RotateCoroutine());
+        base.OnEnter(); // lo usamos para imprimir OnEnter del estado de Patrol
+
+        // Obtenemos una referencia a la co-rutina para poder detenerla apropiadamente.
+        _rotationCoroutine = StartCoroutine(RotateCoroutine());
     }
 
     IEnumerator RotateCoroutine()
@@ -61,7 +68,7 @@ public class PatrolState : BaseState
         RotateGuard();
 
         // Después, decirle que la vuelva a iniciar, para que se vuelva a llamar dentro de ese mismo tiempo.
-        StartCoroutine(RotateCoroutine());
+        _rotationCoroutine = StartCoroutine(RotateCoroutine());
     }
 
     void RotateGuard()
@@ -114,8 +121,10 @@ public class PatrolState : BaseState
 
     public override void OnExit()
     {
-        // Asegurarnos de detener la corrutina que hace que gire el guardia.
-        StopCoroutine(RotateCoroutine());
+        // Asegurarnos de detener la co-rutina que hace que gire el guardia. Para ello, le pasamos la referencia que guardamos.
+        StopCoroutine(_rotationCoroutine);
+
+        base.OnExit();
     }
 
     private bool TargetIsInRange()
