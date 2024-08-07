@@ -324,17 +324,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d920d9b1dde029e4293e2c7c1950ac5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  VisionAnglePatrol: 45
-  VisionDistancePatrol: 10
-  TimeSeeingInfiltratorBeforeEnteringAlert: 2
-  TimeToForget: 5
-  RotationAngle: 45
-  TimeToRotate: 3
-  VisionAngleAlert: 60
-  VisionDistanceAlert: 15
-  TimeSeeingInfiltratorBeforeEnteringAttack: 2
-  VisionAngleAttack: 45
-  VisionDistanceAttack: 10
+  PatrolStateValues: {fileID: 11400000, guid: 97e3eafc74aead14cb6a39601170bce2, type: 2}
+  AlertStateValues: {fileID: 11400000, guid: cb9af772d3c5c014b9aa2cfe4ed87b7a, type: 2}
   PlayerGameObject: {fileID: 0}
 --- !u!1 &680854443
 GameObject:
@@ -437,7 +428,7 @@ Transform:
   m_GameObject: {fileID: 680854443}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.72, y: 6.73, z: 0}
+  m_LocalPosition: {x: 4.72, y: 6.73, z: 17.05}
   m_LocalScale: {x: 3.7181208, y: 3.7181208, z: 3.7181208}
   m_ConstrainProportionsScale: 0
   m_Children: []

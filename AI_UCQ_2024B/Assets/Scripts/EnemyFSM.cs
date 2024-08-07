@@ -20,35 +20,15 @@ public class EnemyFSM : BaseFSM
         get { return AlertStateInstance; }
     }
 
-    // Patrol state
-    public float VisionAnglePatrol = 45.0f;
-    public float VisionDistancePatrol = 10.0f;
-    // Cuánto tiempo tiene que ver al Infiltrador para pasar al estado de Alerta.
-    // como referencia: https://www.youtube.com/clip/UgkxIfuLTVvptjElLkcgE3VMJmSU6qCytLei
-    public float TimeSeeingInfiltratorBeforeEnteringAlert = 2.0f;
-    // Cuánto tiempo tiene que pasar sin ver al infiltrador antes de olvidarlo
-    // (es decir, si ya no lo ha visto en tanto tiempo, entonces se relaja y borra el tiempo
-    // que se había acumulado en TimeSeeingInfiltratorBeforeEnteringAlert).
-    public float TimeToForget = 5.0f;
-    // Qué tantos grados gira en su posición este enemigo cuando está patrullando.
-    public float RotationAngle = 45.0f;
-    // Cada cuánto tiempo va a rotar el patrullero en su posición.
-    public float TimeToRotate = 5.0f;
+    [SerializeField]
+    private PatrolStateScriptableObject PatrolStateValues;
+
+    [SerializeField]
+    private AlertStateScriptableObject AlertStateValues;
 
     // Posición de patrullaje inicial a la cual volverá después de Alert o Attack, según corresponda.
     protected Vector3 InitialPatrolPosition;
-
-
-    // Alert State
-    public float VisionAngleAlert = 60.0f;
-    public float VisionDistanceAlert = 15.0f;
-    // Cuánto tiempo tiene que ver al Infiltrador para pasar al estado de Alerta.
-    public float TimeSeeingInfiltratorBeforeEnteringAttack = 2.0f;
-
-    // Attack state
-    public float VisionAngleAttack = 45.0f;
-    public float VisionDistanceAttack = 10.0f;
-
+    
     public GameObject PlayerGameObject;
 
 
@@ -67,16 +47,23 @@ public class EnemyFSM : BaseFSM
 
         PlayerGameObject = GameObject.FindGameObjectWithTag("Player");
 
+        // Recuerden que, como necesitamos que nuestros estados hereden de MonoBehavior para que puedan usar Corrutinas, 
+        // entonces tenemos que añadirlos con AddComponent, no podemos crearlos usando new como antes.
         PatrolStateInstance = this.AddComponent<PatrolState>();
-        PatrolStateInstance.FSMRef = this;
-        PatrolStateInstance.PlayerGameObject = PlayerGameObject;
 
-        PatrolStateInstance.InitializeState(VisionAnglePatrol, VisionDistancePatrol, 
-            TimeSeeingInfiltratorBeforeEnteringAlert, TimeToForget, RotationAngle, TimeToRotate, 
-            InitialPatrolPosition);
+        // Estas dos líneas las quité porque las metí a la función de InitializeState y
+        // ya nomás paso this y PlayerGameObject como parámetros. 
+        // PatrolStateInstance.FSMRef = this;
+        // PatrolStateInstance.PlayerGameObject = PlayerGameObject;
 
 
-        AlertStateInstance = new AlertState(this);
+        // Ahora nos basta con pasarle la referencia al Scriptable Object que tiene los valores deseados de dicho estado.
+        PatrolStateInstance.InitializeState(this, PlayerGameObject, PatrolStateValues, InitialPatrolPosition);
+
+        AlertStateInstance = this.AddComponent<AlertState>();
+        AlertStateInstance.InitializeState(this, PlayerGameObject, AlertStateValues);
+
+
 
         base.Start();
     }
@@ -87,5 +74,22 @@ public class EnemyFSM : BaseFSM
     {
         // Aquí el estado inicial debería ser Patrol State, ya que lo implementemos.
         return PatrolStateInstance;
+    }
+
+    public bool TargetIsInRange(Vector3 targetPosition, float VisionRange)
+    {
+        // Diferencia entre mi posición y la posición de mi objetivo.
+        // Queremos la magnitud de esa distancia.
+        float distance = (targetPosition - transform.position).magnitude;
+
+        // Si la distancia entre la posición de mi objetivo y mi posición es mayor que mi rango de visión, entonces...
+        if (distance > VisionRange)
+        {
+            // Entonces no podemos ver a ese objetivo.
+            return false;
+        }
+
+        // Entonces sí lo podría ver.
+        return true;
     }
 }

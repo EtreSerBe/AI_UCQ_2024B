@@ -9,9 +9,9 @@ public class BaseFSM : MonoBehaviour
     // Necesitamos la función que nos permita cambiar de estado. Este nunca se necesita cambiar.
     public void ChangeState(BaseState NewState)
     {
-        CurrentState.Exit();
+        CurrentState.OnExit();
         CurrentState = NewState;
-        CurrentState.Enter();
+        CurrentState.OnEnter();
     }
 
     // Start is called before the first frame update
@@ -24,7 +24,7 @@ public class BaseFSM : MonoBehaviour
             Debug.LogError("No hay un estado inicial válido asignado.");
         else
         {
-            CurrentState.Enter();
+            CurrentState.OnEnter();
         }
     }
 
@@ -34,7 +34,7 @@ public class BaseFSM : MonoBehaviour
     {
         if (CurrentState != null)
         {
-            CurrentState.Update();
+            CurrentState.OnUpdate();
         }
     }
 

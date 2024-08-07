@@ -4,26 +4,26 @@ using UnityEngine;
 
 public class PatrolState : BaseState
 {
+    // GameObject que es el Player al cual nuestro patrullero debe detectar.
     public GameObject PlayerGameObject;
 
-    public float VisionAngle = 45.0f;
-    public float VisionDistance = 10.0f;
-    // Cuánto tiempo tiene que ver al Infiltrador para pasar al estado de Alerta.
-    // como referencia: https://www.youtube.com/clip/UgkxIfuLTVvptjElLkcgE3VMJmSU6qCytLei
-    public float TimeSeeingInfiltratorBeforeEnteringAlert = 2.0f;
-    // Cuánto tiempo tiene que pasar sin ver al infiltrador antes de olvidarlo
-    // (es decir, si ya no lo ha visto en tanto tiempo, entonces se relaja y borra el tiempo
-    // que se había acumulado en TimeSeeingInfiltratorBeforeEnteringAlert).
-    public float TimeToForget = 5.0f;
-    // Qué tantos grados gira en su posición este enemigo cuando está patrullando.
-    public float RotationAngle = 45.0f;
-    // Cada cuánto tiempo va a rotar el patrullero en su posición.
-    public float TimeToRotate = 5.0f;
+    // Referencia al Scriptable Object que contiene varios valores que describen cómo se debe comportar este estado.
+    // Por ejemplo, VisionAngle, VisionDistance, TimeToForget, RotationAngle, etc.
+    // Todas ellas se accederán a través de "_stateValues." + el nombre de la variable deseada. Ejemplo: _stateValues.TimeToRotate
+    private PatrolStateScriptableObject _stateValues;
 
     // Posición de patrullaje inicial a la cual volverá después de Alert o Attack, según corresponda.
-    protected Vector3 InitialPatrolPosition;
+    private Vector3 _initialPatrolPosition;
 
-    private GameObject FSMGameObjectOwner;
+    private GameObject _FSMGameObjectOwner;
+
+    private bool PlayerDetected = false;
+
+    private float PlayerDetectedAccumulatedTime = 0.0f;
+
+    private float AccumulatedTimeSinceLastPlayerDetected = 0.0f;
+
+    public bool EnableDebug;
 
     public PatrolState()
     {
@@ -35,22 +35,18 @@ public class PatrolState : BaseState
 
     }
 
-    public void InitializeState(float in_VisionAngle, float in_VisionDistance,
-        float in_TimeSeeingInfiltratorBeforeEnteringAlert, float in_TimeToForget, float in_RotationAgle,
-        float in_TimeToRotate, Vector3 in_InitialPatrolPosition)
+    public virtual void InitializeState(BaseFSM inFSMRef, GameObject inPlayerGameObject, PatrolStateScriptableObject inStateValues, Vector3 inInitialPatrolPosition)
     {
-        VisionAngle = in_VisionAngle;
-        VisionDistance = in_VisionDistance;
-        TimeSeeingInfiltratorBeforeEnteringAlert = in_TimeSeeingInfiltratorBeforeEnteringAlert;
-        TimeToForget = in_TimeToForget;
-        RotationAngle = in_RotationAgle;
-        TimeToRotate = in_TimeToRotate;
-        InitialPatrolPosition = in_InitialPatrolPosition;
+        base.InitializeState(inFSMRef);
+
+        _stateValues = inStateValues;
+        _initialPatrolPosition = inInitialPatrolPosition;
+        PlayerGameObject = inPlayerGameObject;
         // para poder acceder a la info del Patrullero, y, por ejemplo, hacer que rote cada cierto tiempo.
-        FSMGameObjectOwner = FSMRef.gameObject;  
+        _FSMGameObjectOwner = FSMRef.gameObject;
     }
 
-    public override void Enter()
+    public override void OnEnter()
     {
         StartCoroutine(RotateCoroutine());
     }
@@ -59,7 +55,7 @@ public class PatrolState : BaseState
     {
         // Entra,
         // Se espera por TimeToRotate-segundos, 
-        yield return new WaitForSeconds(TimeToRotate);
+        yield return new WaitForSeconds(_stateValues.TimeToRotate);
 
         // Y ya que se acabó el tiempo, rota al personaje.
         RotateGuard();
@@ -70,19 +66,62 @@ public class PatrolState : BaseState
 
     void RotateGuard()
     {
-        FSMGameObjectOwner.transform.Rotate(Vector3.up, RotationAngle);
+        _FSMGameObjectOwner.transform.Rotate(Vector3.up, _stateValues.RotationAngle);
     }
 
 
-    public override void Update()
+    public override void OnUpdate()
     {
+        //if(EnableDebug)
+        //    Debug.Log();
 
+        // Primero necesitamos saber si estamos detectando al jugador o no.
+        PlayerDetected = TargetIsInRange();
+
+        // Si sí se detectó, tenemos que acumular tiempo en la variable de acumular tiempo de detección.
+        if (PlayerDetected)
+        {
+            PlayerDetectedAccumulatedTime += Time.deltaTime;
+
+            // También, si sí lo detectamos, reseteamos este valor a 0.0f.
+            // NOTA: una alternativa sería manejar estos de Accumulated como si fueran una barra que se llena y vacía.
+            AccumulatedTimeSinceLastPlayerDetected += Time.deltaTime;
+
+            // Si el tiempo acumulado es mayor al umbral que pusimos (es decir: TimeSeeingInfiltratorBeforeEnteringAlert)
+            if (PlayerDetectedAccumulatedTime >= _stateValues.TimeSeeingInfiltratorBeforeEnteringAlert)
+            {
+                // Entonces pasamos al estado de alerta.
+                // Necesitamos castear de EnemyFSM para poder decirle a cuál estado queremos pasar.
+                FSMRef.ChangeState(((EnemyFSM)FSMRef).AlertStateRef);
+
+                // como hacemos un cambio de estado, SIEMPRE hacemos nuestro return;
+                return;
+            }
+        }
+        else
+        {
+            // si no lo detectamos, acumulamos tiempo desde la última vez que lo vimos.
+            AccumulatedTimeSinceLastPlayerDetected += Time.deltaTime;
+
+            // si no se detectó, y es llevamos un rato sin verlo, (es decir, si pasó cierto umbral de tiempo),
+            // lo olvidamos y quitamos nuestro tiempo de detección acumulado.
+            if (AccumulatedTimeSinceLastPlayerDetected >= _stateValues.TimeToForget)
+            {
+                PlayerDetectedAccumulatedTime = 0.0f;
+            }
+        }
     }
 
-    public override void Exit()
+    public override void OnExit()
     {
         // Asegurarnos de detener la corrutina que hace que gire el guardia.
         StopCoroutine(RotateCoroutine());
+    }
+
+    private bool TargetIsInRange()
+    {
+        // Mandamos a llamar la función de la FSM, y le pasamos los valores que este estado ya contiene.
+        return ((EnemyFSM)FSMRef).TargetIsInRange(PlayerGameObject.transform.position, _stateValues.VisionDistance);
     }
 
     // Update is called once per frame by the FSM in this case.

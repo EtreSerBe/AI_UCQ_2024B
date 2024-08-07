@@ -20,23 +20,28 @@ public class BaseState : MonoBehaviour
         FSMRef = inBaseFSM;
     }
 
+    public virtual void InitializeState(BaseFSM inBaseFSM)
+    {
+        FSMRef = inBaseFSM;
+    }
+
     // Start is called before the first frame update
-    public virtual void Enter()
+    public virtual void OnEnter()
     {
         // Vamos a poner inicializaciones, pedir memoria, recursos, etc.
 
-        Debug.Log("Enter del estado: " + Name);
+        Debug.Log("OnEnter del estado: " + Name);
     }
 
     // Update is called once per frame
-    public virtual void Update()
+    public virtual void OnUpdate()
     {
-        Debug.Log("Update del estado: " + Name);
+        Debug.Log("OnUpdate del estado: " + Name);
     }
 
-    public virtual void Exit()
+    public virtual void OnExit()
     {
         // Vamos a liberar memoria, quitar recursos, ocultar cosas que ya no sean necesarias, etc.
-        Debug.Log("Exit del estado: " + Name);
+        Debug.Log("OnExit del estado: " + Name);
     }
 }
