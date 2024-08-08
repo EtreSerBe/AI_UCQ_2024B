@@ -89,16 +89,18 @@ public class AlertState : BaseState
                     // si el tiempo acumulado es mayor, pasaríamos a Attack.
                     return;
                 }
-            }
 
-            if (_lastTimePlayerSeen == -1.0f)
-            {
                 // entonces lo acabamos de ver, después.
                 // y guardamos el momento en que lo vimos, para después poder checar si ya pasaron los X segundos
                 // antes de ir a checar la última posición conocida del player.
                 _lastTimePlayerSeen = Time.realtimeSinceStartup;
 
-                Debug.Log("Actualicé la última vez que vi al player en Stopped.");
+                //if (_lastTimePlayerSeen == -1.0f)
+                //{
+
+
+                //    Debug.Log("Actualicé la última vez que vi al player en Stopped.");
+                //}
             }
             else
             {
@@ -113,7 +115,7 @@ public class AlertState : BaseState
 
                     // entonces ponemos LastTimePlayerSeen en -1 (valor que nosotros definimos),
                     // para que sepamos que no es válido ahorita.
-                    _lastTimePlayerSeen = -1.0f;
+                    // _lastTimePlayerSeen = -1.0f;
 
                     // Y le decimos a este enemigo que vaya a la última posición conocida del player,
                     // al ponérsela al NavMeshAgent como su destination.
@@ -123,13 +125,6 @@ public class AlertState : BaseState
 
                     // Después, ponemos el sub-estado a GoingToCheck. 
                     _currentSubState = AlertSubState.GoingToCheck;
-                    // A lo que tendrían que estar atentos es al mensaje/trigger que el NavMesh manda al llegar a su
-                    // destination
-                    // Si no hay tal mensaje, se podría hacer como se muestra aquí:
-                    // https://docs.unity3d.com/ScriptReference/AI.NavMeshAgent-destination.html
-                    // Sino, checar aquí:
-                    // https://docs.unity3d.com/ScriptReference/AI.NavMeshAgent.html
-
                     // Y finalmente hacemos el return porque cambiamos de Sub-estado.
                     return;
                 }
